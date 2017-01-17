@@ -156,6 +156,5 @@ func ArchiveFile(path string) error {
 
 	defer f.Close()
 	defer r.Close()
-	fmt.Println("Tar archive created.")
 	return nil
 }
