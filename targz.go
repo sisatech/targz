@@ -2,6 +2,7 @@ package targz
 
 import (
 	"bytes"
+	"compress/gzip"
 	"encoding/binary"
 	"io"
 	"os"
@@ -11,7 +12,7 @@ import (
 	"github.com/sisatech/targz/structs"
 )
 
-func ArchiveFile(path string) error {
+func ArchiveFile(path, destination string) error {
 	// Get file path & check exists ...
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		return err
@@ -152,7 +153,36 @@ func ArchiveFile(path string) error {
 	}
 	f.Write(endBlocks)
 
+	err = gzipit(path+".tar", destination+".tar.gz")
+	if err != nil {
+		return err
+	}
+
 	defer f.Close()
 	defer r.Close()
 	return nil
+}
+
+func gzipit(source, target string) error {
+	reader, err := os.Open(source)
+	if err != nil {
+		return err
+	}
+	// target = strings.TrimSuffix(target, ".img")
+	writer, err := os.Create(target)
+	if err != nil {
+		return err
+	}
+	defer writer.Close()
+
+	archiver := gzip.NewWriter(writer)
+	archiver.Name = target
+	defer archiver.Close()
+
+	_, err = io.Copy(archiver, reader)
+
+	os.Remove(source)
+
+	return err
+
 }
