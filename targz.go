@@ -3,7 +3,6 @@ package targz
 import (
 	"bytes"
 	"encoding/binary"
-	"fmt"
 	"io"
 	"os"
 	"os/user"
@@ -118,7 +117,6 @@ func ArchiveFile(path string) error {
 	// Treat the 8 Checksum Field bytes as ASCII spaces (dec 32)
 	csVal += (8 * 32)
 
-	fmt.Println(csVal)
 	csOctal := "0" + strconv.FormatUint(uint64(csVal), 8)
 	csBytes := []byte(csOctal)
 	copy(header.Chksum[:], csBytes)
