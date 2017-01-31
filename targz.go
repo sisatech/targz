@@ -39,12 +39,8 @@ func ArchiveFile(path, destination string) error {
 	// User ID and Group ID ...
 	// Do not attempt to get Group ID if running on Windows ...
 	uidInt, _ := strconv.Atoi(u.Uid)
-	if runtime.GOOS != "windows" {
-		gidInt, _ := strconv.Atoi(u.Gid)
-		gid = "000" + strconv.FormatUint(uint64(gidInt), 8)
-	} else {
-		gid = "00000000"
-	}
+	gidInt, _ := strconv.Atoi(u.Gid)
+	gid = "000" + strconv.FormatUint(uint64(gidInt), 8)
 	uid := "000" + strconv.FormatUint(uint64(uidInt), 8)
 
 	copy(header.Uid[:], []byte(uid))
@@ -99,12 +95,20 @@ func ArchiveFile(path, destination string) error {
 	copy(header.Uname[:], uname)
 
 	// Gname ...
-	group, err := user.LookupGroupId(u.Gid)
-	if err != nil {
-		return err
+	var gname []byte
+	if runtime.GOOS != "windows" {
+		group, err := user.LookupGroupId(u.Gid)
+		if err != nil {
+			return err
+		}
+		gname = []byte(group.Name)
+		copy(header.Gname[:], gname)
+	} else {
+		gname = []byte{}
+		for i := 0; i < 32; i++ {
+			gname = append(gname, 0)
+		}
 	}
-	gname := []byte(group.Name)
-	copy(header.Gname[:], gname)
 
 	// Calculate Checksum ...
 	headerBytes := &bytes.Buffer{}
