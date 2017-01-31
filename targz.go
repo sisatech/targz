@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"os/user"
+	"runtime"
 	"strconv"
 
 	"github.com/sisatech/targz/structs"
@@ -34,12 +35,17 @@ func ArchiveFile(path, destination string) error {
 	if err != nil {
 		return err
 	}
-
+	var gid string
 	// User ID and Group ID ...
+	// Do not attempt to get Group ID if running on Windows ...
 	uidInt, _ := strconv.Atoi(u.Uid)
-	gidInt, _ := strconv.Atoi(u.Gid)
+	if runtime.GOOS != "windows" {
+		gidInt, _ := strconv.Atoi(u.Gid)
+		gid = "000" + strconv.FormatUint(uint64(gidInt), 8)
+	} else {
+		gid = "00000000"
+	}
 	uid := "000" + strconv.FormatUint(uint64(uidInt), 8)
-	gid := "000" + strconv.FormatUint(uint64(gidInt), 8)
 
 	copy(header.Uid[:], []byte(uid))
 	copy(header.Gid[:], []byte(gid))
